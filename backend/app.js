@@ -33,18 +33,40 @@ const getToken = async () => {
 };
 
 app.get("/api/trains", async (req, res, next) => {
-    const token = await getToken();
-    const response = await fetch("http://20.244.56.144/train/trains", {
+  const token = await getToken();
+  const response = await fetch("http://20.244.56.144/train/trains", {
       headers: {
-        Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
       },
-    });
-    const result = await response.json();
-    return res.json({
+  });
+  const result = await response.json();
+
+  result.sort((a, b) => {
+      // Ascending order of price
+      const priceComparison = a.price.sleeper - b.price.sleeper;
+
+      // Descending order of tickets (sleeper)
+      const sleeperComparison = b.seatsAvailable.sleeper - a.seatsAvailable.sleeper;
+
+      // Descending order of departure time (in hours)
+      const departureComparison = b.departureTime.Hours - a.departureTime.Hours;
+
+      // If price is the same, sort by sleeper tickets and departure time
+      if (priceComparison === 0) {
+          if (sleeperComparison === 0) {
+              return departureComparison;
+          }
+          return sleeperComparison;
+      }
+
+      return priceComparison;
+  });
+
+  return res.json({
       success: true,
       result,
-    });
   });
+});
 
   app.get("/api/trains/:id", async (req, res, next) => {
     const { id } = req.params;
